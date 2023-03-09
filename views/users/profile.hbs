@@ -23,31 +23,107 @@
     </div>
   </div>
 </div>
-<div class='mt-4'>
-  <div class='card'>
-    <div class='card-header'>
-      <strong>{{comments.length}}</strong>
-      已評論餐廳
+<div class='mt-4 row'>
+  <div class='col-md-4'>
+    <div class='card mb-4'>
+      <div class='card-header'>
+        <strong>{{userProfile.Followings.length}}</strong>
+        followings(追蹤者)
+      </div>
+      <div class='card-body d-flex flex-row flex-wrap'>
+        {{#if userProfile.Followings.length}}
+          {{#each userProfile.Followings}}
+            <a href='/users/{{this.id}}' alt='{{this.name}}' s>
+              <img
+                src='{{this.image}}'
+                width='60'
+                height='60'
+                class='rounded m-2'
+                title='{{this.name}}'
+              />
+            </a>
+          {{/each}}
+        {{else}}
+          <p>尚未追蹤其他使用者</p>
+        {{/if}}
+      </div>
     </div>
-    <div class='card-body d-flex flex-row flex-wrap'>
-      {{#if comments.length}}
-        {{#each comments}}
-          <a
-            href='/restaurants/{{this.Restaurant.id}}'
-            alt='{{this.Restaurant.name}}'
-          >
-            <img
-              src='{{this.Restaurant.image}}'
-              width='60'
-              height='60'
-              class='rounded m-2'
-              title='{{this.Restaurant.name}}'
-            />
-          </a>
-        {{/each}}
-      {{else}}
-        <p>尚未評論餐廳</p>
-      {{/if}}
+    <div class='card'>
+      <div class='card-header'>
+        <strong>{{userProfile.Followers.length}}</strong>
+        follower(被追蹤者)
+      </div>
+      <div class='card-body d-flex flex-row flex-wrap'>
+        {{#if userProfile.Followers.length}}
+          {{#each userProfile.Followers}}
+            <a href='/users/{{this.id}}' alt='{{this.name}}'>
+              <img
+                src='{{this.image}}'
+                width='60'
+                height='60'
+                class='rounded m-2'
+                title='{{this.name}}'
+              />
+            </a>
+          {{/each}}
+        {{else}}
+          <p>尚未被其他使用者追蹤</p>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+  <div class='col-md-8'>
+    <div class='card mb-4'>
+      <div class='card-header'>
+        <strong>{{comments.length}}</strong>
+        已評論餐廳
+      </div>
+      <div class='card-body d-flex flex-row flex-wrap'>
+        {{#if comments.length}}
+          {{#each comments}}
+            <a
+              href='/restaurants/{{this.Restaurant.id}}'
+              alt='{{this.Restaurant.name}}'
+            >
+              <img
+                src='{{this.Restaurant.image}}'
+                width='60'
+                height='60'
+                class='rounded m-2'
+                title='{{this.Restaurant.name}}'
+              />
+            </a>
+          {{/each}}
+        {{else}}
+          <p>尚未評論餐廳</p>
+        {{/if}}
+      </div>
+    </div>
+    <div class='card'>
+      <div class='card-header'>
+        <strong>{{userProfile.FavoritedRestaurants.length}}</strong>
+        已收藏餐廳
+      </div>
+      <div class='card-body d-flex flex-row flex-wrap'>
+        {{#if userProfile.FavoritedRestaurants.length}}
+          {{#each userProfile.FavoritedRestaurants}}
+            <a
+              href='/restaurants/{{this.id}}'
+              alt='{{this.name}}'
+            >
+              <img
+                src='{{this.image}}'
+                width='60'
+                height='60'
+                class='rounded m-2'
+                title='{{this.name}}'
+              />
+            </a>
+          {{/each}}
+        {{else}}
+          <p>尚未收藏餐廳</p>
+        {{/if}}
+      </div>
     </div>
   </div>
 </div>
