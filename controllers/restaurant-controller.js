@@ -119,11 +119,11 @@ const restaurantController = {
     const loginUser = getUser(req)
     return Restaurant.findAll({
       include: [{ model: User, as: 'FavoritedUsers', attributes: ['id'] }],
-      attributes: {
-        include: [[sequelize.fn('COUNT', sequelize.col('FavoritedUsers.id')), 'favoritedCount']]
-      },
+      attributes: ['id', 'name', 'image', 'description', [sequelize.fn('COUNT', sequelize.col('FavoritedUsers.id')), 'favoritedCount']],
       group: ['Restaurant.id'],
-      order: [['favoritedCount', 'DESC'], ['name', 'ASC']]
+      order: [['favoritedCount', 'DESC'], ['name', 'ASC']],
+      subQuery: false,
+      limit: 10
     })
       .then(restaurants => {
         const result = restaurants
@@ -132,7 +132,6 @@ const restaurantController = {
             description: restaurant.description.substring(0, 50),
             isFavorited: loginUser && loginUser.FavoritedRestaurants.some(favorite => favorite.id === restaurant.id)
           }))
-          .slice(0, 10)
         return res.render('top-restaurants', { restaurants: result })
       })
       .catch(error => next(error))

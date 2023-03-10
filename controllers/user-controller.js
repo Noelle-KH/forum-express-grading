@@ -187,7 +187,6 @@ const userController = {
             isFollowed: loginUser.Followings.some(following => following.id === user.id),
             canFollowed: loginUser.id !== user.id
           }))
-        console.log(result)
         return res.render('top-users', { users: result })
       })
       .catch(error => next(error))
