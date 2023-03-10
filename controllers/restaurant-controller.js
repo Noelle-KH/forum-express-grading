@@ -1,8 +1,10 @@
-const { Restaurant, Category, Comment, User } = require('../models')
+const { Restaurant, Category, Comment, User, sequelize } = require('../models')
 const { getOffset, getPagination } = require('../helpers/pagination-helper')
+const { getUser } = require('../helpers/auth-helpers')
 
 const restaurantController = {
   getRestaurants: (req, res, next) => {
+    const loginUser = getUser(req)
     const DEFAULT_LIMIT = 9
     const categoryId = Number(req.query.categoryId) || ''
     const page = Number(req.query.page) || 1
@@ -25,8 +27,10 @@ const restaurantController = {
         if (!restaurants.rows.length) throw new Error("Restaurant didn't exist.")
         if (!categories.length) throw new Error("Category didn't exist.")
 
-        const favoritedRestaurantsId = req.user && req.user.FavoritedRestaurants.map(favorite => favorite.id)
-        const likedRestaurantId = req.user && req.user.LikedRestaurants.map(like => like.id)
+        const favoritedRestaurantsId = loginUser && loginUser.FavoritedRestaurants
+          .map(favorite => favorite.id)
+        const likedRestaurantId = loginUser && loginUser.LikedRestaurants
+          .map(like => like.id)
         const data = restaurants.rows.map(restaurant => ({
           ...restaurant,
           description: restaurant.description.substring(0, 50),
@@ -43,12 +47,14 @@ const restaurantController = {
       .catch(error => next(error))
   },
   getRestaurant: (req, res, next) => {
-    return Restaurant.findByPk(req.params.id, {
+    const loginUserId = getUser(req).id
+    const id = req.params.id
+    return Restaurant.findByPk(id, {
       include: [
-        Category,
-        { model: Comment, include: User },
-        { model: User, as: 'FavoritedUsers' },
-        { model: User, as: 'LikedUsers' }
+        { model: Category, attributes: ['name'] },
+        { model: Comment, include: { model: User, attributes: ['id', 'name'] } },
+        { model: User, as: 'FavoritedUsers', attributes: ['id'] },
+        { model: User, as: 'LikedUsers', attributes: ['id'] }
       ],
       order: [[Comment, 'createdAt', 'DESC']]
     })
@@ -58,8 +64,8 @@ const restaurantController = {
         return restaurant.increment('view_counts')
       })
       .then(restaurant => {
-        const isFavorited = restaurant.FavoritedUsers.some(favorite => favorite.id === req.user.id)
-        const isLiked = restaurant.LikedUsers.some(like => like.id === req.user.id)
+        const isFavorited = restaurant.FavoritedUsers.some(favorite => favorite.id === loginUserId)
+        const isLiked = restaurant.LikedUsers.some(like => like.id === loginUserId)
         return res.render('restaurant', {
           restaurant: restaurant.toJSON(),
           isFavorited,
@@ -72,9 +78,9 @@ const restaurantController = {
     const id = req.params.id
     return Restaurant.findByPk(id, {
       include: [
-        Category,
-        Comment,
-        { model: User, as: 'FavoritedUsers' }
+        { model: Category, attributes: ['id', 'name'] },
+        { model: Comment, attributes: ['id'] },
+        { model: User, as: 'FavoritedUsers', attributes: ['id'] }
       ]
     })
       .then(restaurant => {
@@ -89,14 +95,17 @@ const restaurantController = {
       Restaurant.findAll({
         limit: 10,
         order: [['createdAt', 'DESC']],
-        include: Category,
+        include: { model: Category, attributes: ['name'] },
         raw: true,
         nest: true
       }),
       Comment.findAll({
         limit: 10,
         order: [['createdAt', 'DESC']],
-        include: [User, Restaurant],
+        include: [
+          { model: User, attributes: ['id', 'name'] },
+          { model: Restaurant, attributes: ['id', 'name'] }
+        ],
         raw: true,
         nest: true
       })
@@ -107,18 +116,22 @@ const restaurantController = {
       .catch(error => next(error))
   },
   getTopRestaurants: (req, res, next) => {
+    const loginUser = getUser(req)
     return Restaurant.findAll({
-      include: [{ model: User, as: 'FavoritedUsers' }]
+      include: [{ model: User, as: 'FavoritedUsers', attributes: ['id'] }],
+      attributes: {
+        include: [[sequelize.fn('COUNT', sequelize.col('FavoritedUsers.id')), 'favoritedCount']]
+      },
+      group: ['Restaurant.id'],
+      order: [['favoritedCount', 'DESC']]
     })
       .then(restaurants => {
         const result = restaurants
           .map(restaurant => ({
             ...restaurant.toJSON(),
-            description: req.user && restaurant.description.substring(0, 50),
-            favoritedCount: req.user && restaurant.FavoritedUsers.length,
-            isFavorited: req.user && req.user.FavoritedRestaurants.some(favorite => favorite.id === restaurant.id)
+            description: restaurant.description.substring(0, 50),
+            isFavorited: loginUser && loginUser.FavoritedRestaurants.some(favorite => favorite.id === restaurant.id)
           }))
-          .sort((a, b) => b.favoritedCount - a.favoritedCount)
           .slice(0, 10)
         return res.render('top-restaurants', { restaurants: result })
       })
