@@ -4,15 +4,16 @@ const { imgurFileHandler } = require('../helpers/file-helpers')
 const adminController = {
   getRestaurants: (req, res, next) => {
     return Restaurant.findAll({
+      include: [{ model: Category, attributes: ['name'] }],
       raw: true,
-      nest: true,
-      include: [Category]
+      nest: true
     })
       .then(restaurants => res.render('admin/restaurants', { restaurants }))
       .catch(error => next(error))
   },
   createRestaurant: (req, res, next) => {
     return Category.findAll({
+      attributes: ['id', 'name'],
       raw: true
     })
       .then(categories => res.render('admin/create-restaurant', { categories }))
@@ -40,8 +41,9 @@ const adminController = {
       .catch(error => next(error))
   },
   getRestaurant: (req, res, next) => {
-    return Restaurant.findByPk(req.params.id, {
-      include: [Category]
+    const { id } = req.params
+    return Restaurant.findByPk(id, {
+      include: [{ model: Category, attributes: ['name'] }]
     })
       .then(restaurant => {
         if (!restaurant) throw new Error("Restaurant didn't exist.")
@@ -51,8 +53,9 @@ const adminController = {
       .catch(error => next(error))
   },
   editRestaurant: (req, res, next) => {
+    const { id } = req.params
     return Promise.all([
-      Restaurant.findByPk(req.params.id, { raw: true }),
+      Restaurant.findByPk(id, { raw: true }),
       Category.findAll({ raw: true })
     ])
       .then(([restaurant, categories]) => {
@@ -63,12 +66,13 @@ const adminController = {
       .catch(error => next(error))
   },
   putRestaurant: (req, res, next) => {
+    const { id } = req.params
     const { name, tel, address, openingHours, description, categoryId } = req.body
     const { file } = req
     if (!name) throw new Error('Restaurant name is required.')
 
     return Promise.all([
-      Restaurant.findByPk(req.params.id),
+      Restaurant.findByPk(id),
       imgurFileHandler(file)
     ])
       .then(([restaurant, filePath]) => {
@@ -91,7 +95,8 @@ const adminController = {
       .catch(error => next(error))
   },
   deleteRestaurant: (req, res, next) => {
-    return Restaurant.findByPk(req.params.id)
+    const { id } = req.params
+    return Restaurant.findByPk(id)
       .then(restaurant => {
         if (!restaurant) throw new Error("Restaurant didn't exist/")
 
@@ -101,12 +106,15 @@ const adminController = {
       .catch(error => next(error))
   },
   getUsers: (req, res, next) => {
-    return User.findAll({ raw: true })
+    return User.findAll({
+      attributes: ['id', 'name', 'email', 'isAdmin'],
+      raw: true
+    })
       .then(users => res.render('admin/users', { users }))
       .catch(error => next(error))
   },
   patchUser: (req, res, next) => {
-    const id = req.params.id
+    const { id } = req.params
     return User.findByPk(id)
       .then(user => {
         if (!user) throw new Error("User didn't exist.")

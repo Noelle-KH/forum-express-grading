@@ -2,9 +2,10 @@ const { Category } = require('../models')
 
 const categoryController = {
   getCategories: (req, res, next) => {
+    const { id } = req.params
     return Promise.all([
       Category.findAll({ raw: true }),
-      req.params.id ? Category.findByPk(req.params.id, { raw: true }) : null
+      id ? Category.findByPk(id, { raw: true }) : null
     ])
       .then(([categories, category]) => {
         return res.render('admin/categories', { categories, category })
@@ -20,10 +21,11 @@ const categoryController = {
       .catch(error => next(error))
   },
   putCategory: (req, res, next) => {
+    const { id } = req.params
     const { name } = req.body
     if (!name) throw new Error('Category name is required.')
 
-    return Category.findByPk(req.params.id)
+    return Category.findByPk(id)
       .then(category => {
         if (!category) throw new Error("Category didn't exist.")
         return category.update({ name })
@@ -32,7 +34,8 @@ const categoryController = {
       .catch(error => next(error))
   },
   deleteCategory: (req, res, next) => {
-    return Category.findByPk(req.params.id)
+    const { id } = req.params
+    return Category.findByPk(id)
       .then(category => {
         if (!category) throw new Error("Category didn't exist.")
 
