@@ -123,7 +123,7 @@ const restaurantController = {
         include: [[sequelize.fn('COUNT', sequelize.col('FavoritedUsers.id')), 'favoritedCount']]
       },
       group: ['Restaurant.id'],
-      order: [['favoritedCount', 'DESC']]
+      order: [['favoritedCount', 'DESC'], ['name', 'ASC']]
     })
       .then(restaurants => {
         const result = restaurants

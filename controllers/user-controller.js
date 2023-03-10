@@ -175,9 +175,9 @@ const userController = {
   getTopUsers: (req, res, next) => {
     return User.findAll({
       include: [{ model: User, as: 'Followers' }],
-      attributes: ['id', 'name', 'image', [sequelize.fn('COUNT', 'Followers.id'), 'followerCount']],
+      attributes: ['id', 'name', 'image', [sequelize.fn('COALESCE', sequelize.fn('COUNT', sequelize.col('Followers.id')), 0), 'followerCount']],
       group: ['User.id'],
-      order: [['followerCount', 'DESC']]
+      order: [['followerCount', 'DESC'], ['name', 'ASC']]
     })
       .then(users => {
         const loginUser = getUser(req)
@@ -187,6 +187,7 @@ const userController = {
             isFollowed: loginUser.Followings.some(following => following.id === user.id),
             canFollowed: loginUser.id !== user.id
           }))
+        console.log(result)
         return res.render('top-users', { users: result })
       })
       .catch(error => next(error))
