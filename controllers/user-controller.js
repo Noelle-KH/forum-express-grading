@@ -174,7 +174,7 @@ const userController = {
     return User.findAll({
       include: [{ model: User, as: 'Followers' }],
       attributes: ['id', 'name', 'image', [sequelize.fn('COALESCE', sequelize.fn('COUNT', sequelize.col('Followers.id')), 0), 'followerCount']],
-      group: ['User.id'],
+      group: ['User.id', 'name', 'image'],
       order: [['followerCount', 'DESC'], ['name', 'ASC']]
     })
       .then(users => {
