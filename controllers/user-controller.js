@@ -39,6 +39,7 @@ const userController = {
     return res.redirect('/signin')
   },
   getUser: (req, res, next) => {
+    const loginUser = getUser(req)
     const { id } = req.params
     return Promise.all([
       User.findByPk(id, {
@@ -61,13 +62,10 @@ const userController = {
       .then(([userProfile, comments]) => {
         if (!userProfile) throw new Error("User didn't exist.")
 
-        const loginUser = getUser(req)
-        const isFollowed = loginUser.Followers.some(following => following.id === userProfile.id)
         return res.render('users/profile', {
           user: loginUser,
           userProfile: userProfile.toJSON(),
-          comments,
-          isFollowed
+          comments
         })
       })
       .catch(error => next(error))
