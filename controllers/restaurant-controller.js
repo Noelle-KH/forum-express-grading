@@ -120,7 +120,7 @@ const restaurantController = {
     return Restaurant.findAll({
       include: [{ model: User, as: 'FavoritedUsers', attributes: ['id'] }],
       attributes: ['id', 'name', 'image', 'description', [sequelize.fn('COUNT', sequelize.col('FavoritedUsers.id')), 'favoritedCount']],
-      group: ['Restaurant.id', 'name', 'image', 'description'],
+      group: ['Restaurant.id', 'FavoritedUsers.id', 'name', 'image', 'description'],
       order: [['favoritedCount', 'DESC'], ['name', 'ASC']],
       subQuery: false,
       limit: 10
